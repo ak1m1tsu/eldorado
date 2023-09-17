@@ -15,5 +15,6 @@ var (
 //go:generate go run github.com/vektra/mockery/v2@v2.20.2 --name Storage
 type Storage interface {
 	FindByUsername(ctx context.Context, username string) (data.User, error)
+	FindByEmail(ctx context.Context, email string) (data.User, error)
 	Save(ctx context.Context, u *data.User) error
 }

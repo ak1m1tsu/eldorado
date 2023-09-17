@@ -23,13 +23,15 @@ services:
     restart: always
     environment:
       - PORT=${AUTH_SERVICE_PORT}
+      - AUTH_SERVICE_CONFIG_PATH=${AUTH_SERVICE_CONFIG_PATH}
     networks:
       - worknet
     ports:
-      - "${AUTH_SERVICE_PORT}"
+      - "${AUTH_SERVICE_PORT}:${AUTH_SERVICE_PORT}"
     depends_on:
       - redis
       - rabbitmq
+      - postgres
   emailsender:
     container_name: email-sender
     build:

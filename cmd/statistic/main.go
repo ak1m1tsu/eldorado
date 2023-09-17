@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	cfg, err := config.LoadSchedulerConfig()
+	cfg, err := config.LoadStatisticServiceConfig()
 	failOnError("failed to load config", err)
 
 	sigCh := make(chan os.Signal, 1)

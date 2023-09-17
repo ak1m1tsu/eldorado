@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"os"
+	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
 )
@@ -11,17 +12,36 @@ type APIConfig struct {
 	Env string `yaml:"env"`
 }
 
-type SchedulerConfig struct {
+type StatisticServiceConfig struct {
 	Env      string   `yaml:"env"`
 	Schedule string   `yaml:"schedule"`
 	RabbitMQ rabbitmq `yaml:"rabbitmq"`
 	Postgres postgres `yaml:"postgres"`
 }
 
-type EmailSenderConfig struct {
+type EmailServiceConfig struct {
 	Env      string   `yaml:"env"`
 	RabbitMQ rabbitmq `yaml:"rabbitmq"`
 	SMTP     smtp     `yaml:"smtp"`
+}
+
+type AuthServiceConfig struct {
+	Env          string   `yaml:"env"`
+	Port         string   `env:"PORT"`
+	AccessCreds  rsacreds `yaml:"access"`
+	RefreshCreds rsacreds `yaml:"refresh"`
+	Postgres     postgres `yaml:"postgres"`
+	Redis        redis    `yaml:"redis"`
+}
+
+type rsacreds struct {
+	PrivateKey string        `yaml:"private_key" env:"RSA_PRIVATE_KEY"`
+	PublicKey  string        `yaml:"public_key" env:"RSA_PUBLIC_KEY"`
+	Expires    time.Duration `yaml:"expires"`
+}
+
+type redis struct {
+	URL string `yaml:"url" env:"REDIS_URL"`
 }
 
 type postgres struct {
@@ -40,13 +60,13 @@ type smtp struct {
 	Password string `env:"SMTP_PASS"`
 }
 
-func LoadEmailSenderConfig() (*EmailSenderConfig, error) {
+func LoadEmailSenderConfig() (*EmailServiceConfig, error) {
 	path, err := configPath("EMAIL_SENDER_CONFIG_PATH")
 	if err != nil {
 		return nil, err
 	}
 
-	var cfg EmailSenderConfig
+	var cfg EmailServiceConfig
 	if err = cleanenv.ReadConfig(path, &cfg); err != nil {
 		return nil, err
 	}
@@ -54,18 +74,46 @@ func LoadEmailSenderConfig() (*EmailSenderConfig, error) {
 	return &cfg, nil
 }
 
-func LoadSchedulerConfig() (*SchedulerConfig, error) {
+func LoadStatisticServiceConfig() (*StatisticServiceConfig, error) {
 	path, err := configPath("STATISTIC_CONFIG_PATH")
 	if err != nil {
 		return nil, err
 	}
 
-	var cfg SchedulerConfig
+	var cfg StatisticServiceConfig
 	if err = cleanenv.ReadConfig(path, &cfg); err != nil {
 		return nil, err
 	}
 
 	return &cfg, err
+}
+
+func LoadAuthServiceConfig() (*AuthServiceConfig, error) {
+	path, err := configPath("AUTH_SERVICE_CONFIG_PATH")
+	if err != nil {
+		return nil, err
+	}
+
+	var cfg AuthServiceConfig
+	if err = cleanenv.ReadConfig(path, &cfg); err != nil {
+		return nil, err
+	}
+
+	return &cfg, err
+}
+
+func LoadApiConfig() (*APIConfig, error) {
+	path, err := configPath("API_CONFIG_PATH")
+	if err != nil {
+		return nil, err
+	}
+
+	var cfg APIConfig
+	if err = cleanenv.ReadConfig(path, &cfg); err != nil {
+		return nil, err
+	}
+
+	return &cfg, nil
 }
 
 func configPath(env string) (string, error) {

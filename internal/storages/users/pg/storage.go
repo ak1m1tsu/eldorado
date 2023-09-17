@@ -35,26 +35,16 @@ func New(db *sql.DB) (*UsersStorage, error) {
 func (s *UsersStorage) FindByUsername(ctx context.Context, username string) (data.User, error) {
 	const query = "SELECT id, email, username, encrypted_password, name, created_on FROM users WHERE username = $1 AND deleted_on IS NULL"
 
-	prepareCtx, cancel := context.WithTimeout(ctx, storages.PrepareTimeout)
-	defer cancel()
+	return s.findUser(ctx, query, username)
+}
 
-	stmt, err := s.db.PrepareContext(prepareCtx, query)
-	if err != nil {
-		return data.User{}, err
-	}
-	defer stmt.Close()
+// FindByUsername returns user by given username.
+//
+// If user is not found returns users.ErrNotFound.
+func (s *UsersStorage) FindByEmail(ctx context.Context, email string) (data.User, error) {
+	const query = "SELECT id, email, username, encrypted_password, name, created_on FROM users WHERE email = $1 AND deleted_on IS NULL"
 
-	var u data.User
-	err = stmt.QueryRowContext(ctx, username).Scan(&u.ID, &u.Email, &u.Username, &u.EncryptedPassword, &u.Name, &u.CreatedOn)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return data.User{}, users.ErrNotFound
-		}
-
-		return data.User{}, err
-	}
-
-	return u, nil
+	return s.findUser(ctx, query, email)
 }
 
 // Save saves a given user in database.
@@ -82,4 +72,28 @@ func (s *UsersStorage) Save(ctx context.Context, u *data.User) error {
 	}
 
 	return nil
+}
+
+func (s *UsersStorage) findUser(ctx context.Context, query, param string) (data.User, error) {
+	prepareCtx, cancel := context.WithTimeout(ctx, storages.PrepareTimeout)
+	defer cancel()
+
+	stmt, err := s.db.PrepareContext(prepareCtx, query)
+	if err != nil {
+		return data.User{}, err
+	}
+	defer stmt.Close()
+
+	var u data.User
+	err = stmt.QueryRowContext(ctx, param).
+		Scan(&u.ID, &u.Email, &u.Username, &u.EncryptedPassword, &u.Name, &u.CreatedOn)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return data.User{}, users.ErrNotFound
+		}
+
+		return data.User{}, err
+	}
+
+	return u, nil
 }

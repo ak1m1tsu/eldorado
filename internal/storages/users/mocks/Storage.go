@@ -14,6 +14,30 @@ type Storage struct {
 	mock.Mock
 }
 
+// FindByEmail provides a mock function with given fields: ctx, email
+func (_m *Storage) FindByEmail(ctx context.Context, email string) (data.User, error) {
+	ret := _m.Called(ctx, email)
+
+	var r0 data.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (data.User, error)); ok {
+		return rf(ctx, email)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) data.User); ok {
+		r0 = rf(ctx, email)
+	} else {
+		r0 = ret.Get(0).(data.User)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, email)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindByUsername provides a mock function with given fields: ctx, username
 func (_m *Storage) FindByUsername(ctx context.Context, username string) (data.User, error) {
 	ret := _m.Called(ctx, username)
