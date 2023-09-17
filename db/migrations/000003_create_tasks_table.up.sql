@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS "public".tasks (
     title varchar(100) NOT NULL,
     description varchar(255) NOT NULL,
     is_completed boolean DEFAULT false NOT NULL,
+    is_deleted boolean DEFAULT false NOT NULL,
     created_on timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_on timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
     deleted_on timestamp,

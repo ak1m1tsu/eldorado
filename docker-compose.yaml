@@ -46,14 +46,18 @@ services:
       - "${EMAIL_SENDER_PORT}"
     depends_on:
       - rabbitmq
-  scheduler:
-    container_name: scheduler
+  statistic:
+    container_name: statistic
     build:
       context: .
-      dockerfile: ./build/scheduler.Dockerfile
+      dockerfile: ./build/statistic.Dockerfile
     restart: always
     environment:
-      - "${SCHEDULER_PORT}"
+      - STATISTIC_CONFIG_PATH=${STATISTIC_CONFIG_PATH}
+    networks:
+      - worknet
+    ports:
+      - "${STATISTIC_SERVICE_PORT}"
     depends_on:
       - rabbitmq
       - postgres

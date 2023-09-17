@@ -2,10 +2,7 @@ env: local
 allowed_origins:
   - "localhost:3030"
 postgres:
-  user: postgres
-  password: postgres
-  database: exhort
-  host: localhost
+  url:
   port: 5432
 server:
   addr: localhost:3000
@@ -13,11 +10,7 @@ server:
   write_timeout: 10s
   idle_timeout: 120s
 redis:
-  user: default
-  password: guest
-  host: localhost
-  database: 0
-  port: 6379
+  url:
   read_timeout: 10s
   write_timeout: 10s
   dial_timeout: 10s
@@ -27,8 +20,4 @@ access:
 refresh:
   expiration: 15m
 rabbitmq:
-  host: localhost
-  port: 5672
-  user: guest
-  password: guest
   queue_name: EMAILS
