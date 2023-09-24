@@ -3,12 +3,12 @@ module github.com/romankravchuk/eldorado
 go 1.21.0
 
 require (
+	github.com/go-chi/chi/v5 v5.0.10
 	github.com/go-playground/locales v0.14.1
 	github.com/go-playground/universal-translator v0.18.1
 	github.com/go-playground/validator/v10 v10.15.4
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/uuid v1.3.1
-	github.com/gorilla/mux v1.8.0
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/lib/pq v1.10.9
 	github.com/rabbitmq/amqp091-go v1.8.1

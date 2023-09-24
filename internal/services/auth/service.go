@@ -386,6 +386,24 @@ func (s *Service) ConfirmSingUp(ctx context.Context, in *proto.ConfirmSignUpRequ
 	return &proto.Response{Status: http.StatusOK}, nil
 }
 
+func (s *Service) Verify(ctx context.Context, in *proto.VerifyRequest) (*proto.VerifyResponse, error) {
+	payload, err := jwt.ValidateToken(in.Token, s.access.PublicKey)
+	if err != nil {
+		msg := "failed to valide request token"
+
+		s.log.Error(msg, sl.Err(err), slog.String("token", in.Token))
+
+		return &proto.VerifyResponse{
+			Meta: &proto.Response{Status: http.StatusForbidden},
+		}, nil
+	}
+
+	return &proto.VerifyResponse{
+		Meta:   &proto.Response{Status: http.StatusOK},
+		UserID: payload.UserID,
+	}, nil
+}
+
 func decodeRSAKeys(private, public string) (pem, pub []byte, err error) {
 	pem, err = base64.StdEncoding.DecodeString(private)
 	if err != nil {
