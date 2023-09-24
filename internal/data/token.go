@@ -1,6 +1,7 @@
 package data
 
 import (
+	"crypto/rsa"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -27,7 +28,7 @@ type Claims struct {
 }
 
 type RSACredentials struct {
-	PrivateKey []byte
-	PublicKey  []byte
+	PrivateKey *rsa.PrivateKey
+	PublicKey  *rsa.PublicKey
 	TTL        time.Duration
 }

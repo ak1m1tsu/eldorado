@@ -8,7 +8,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/romankravchuk/eldorado/internal/data"
 	"github.com/romankravchuk/eldorado/internal/pkg/sl"
 	"github.com/romankravchuk/eldorado/internal/server/http/api"
 	"github.com/romankravchuk/eldorado/internal/server/http/api/response"
@@ -27,7 +26,7 @@ func HandleDeleteTask(log *slog.Logger, deleter TaskDeleter) api.APIFunc {
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
 
-		userID, ok := r.Context().Value(data.ContextKeyUser).(string)
+		userID, ok := r.Context().Value(api.UserIDKey).(string)
 		if !ok {
 			msg := "forbidden"
 

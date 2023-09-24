@@ -26,6 +26,14 @@ func HandleCreateTask(log *slog.Logger, creater TaskCreater) api.APIFunc {
 		Description string `json:"description" validate:"required,min=3,max=500"`
 	}
 
+	type task struct {
+		ID          string `json:"id"`
+		Title       string `json:"title"`
+		Description string `json:"description"`
+		IsCompleted bool   `json:"is_completed"`
+		CreatedOn   string `json:"created_on"`
+	}
+
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log := log.With(
 			slog.String("op", op),
@@ -87,7 +95,13 @@ func HandleCreateTask(log *slog.Logger, creater TaskCreater) api.APIFunc {
 		}
 
 		return response.JSON(w, http.StatusCreated, response.M{
-			"task": t,
+			"task": task{
+				ID:          t.ID,
+				Title:       t.Title,
+				Description: t.Description,
+				IsCompleted: t.IsCompleted,
+				CreatedOn:   t.CreatedOn.Format(time.RFC3339),
+			},
 		})
 	}
 }

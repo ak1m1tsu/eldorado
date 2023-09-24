@@ -1,6 +1,6 @@
 env: local
 redis:
-  url: redis://guest:guest@redis:6379/0?dial_timeout=15s&read_timeout=5s&write_timeout=5s
+  url: redis://default:guest@redis:6379/0?dial_timeout=15s&read_timeout=5s&write_timeout=5s
 postgres:
   url: "postgres://postgres:postgres@postgres:5432/eldorado?sslmode=disable"
 access:

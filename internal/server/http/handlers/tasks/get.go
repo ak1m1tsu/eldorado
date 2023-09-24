@@ -33,7 +33,7 @@ func HandleGetTasks(log *slog.Logger, lister TasksLister) api.APIFunc {
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
 
-		userID, ok := r.Context().Value(data.ContextKeyUser).(string)
+		userID, ok := r.Context().Value(api.UserIDKey).(string)
 		if !ok {
 			msg := "forbidden"
 

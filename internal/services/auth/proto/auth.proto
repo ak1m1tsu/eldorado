@@ -9,17 +9,13 @@ service AuthService {
     rpc Token(TokenRequest) returns (TokenResponse) {}
     rpc Refresh(RefreshRequest) returns (RefreshResponse) {}
     rpc Verify(VerifyRequest) returns (VerifyResponse) {}
-    rpc ResetPassword(ResetPasswordRequest) returns (Response) {}
-    rpc ConfirmSingUp(ConfirmSignUpRequest) returns (Response) {}
 }
 
 message User {
     string id = 1;
     string username = 2;
     string email = 3;
-    string firstName = 4;
-    string lastName = 5;
-    string createdOn = 6;
+    string createdOn = 4;
 }
 
 message Response {
@@ -31,8 +27,6 @@ message SignUpRequest {
     string email = 1;
     string username = 2;
     string password = 3;
-    string firstName = 4;
-    string lastName = 5;
 }
 
 message TokenRequest {
@@ -51,14 +45,6 @@ message RefreshRequest {
 message RefreshResponse {
     Response meta = 1;
     string accessToken = 2;
-}
-
-message ResetPasswordRequest {
-    string accessToken = 1;
-}
-
-message ConfirmSignUpRequest {
-    string code = 1;
 }
 
 message VerifyRequest {

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/romankravchuk/eldorado/internal/server/http/api"
 )
 
 func Logger(log *slog.Logger) func(next http.Handler) http.Handler {
@@ -17,7 +16,7 @@ func Logger(log *slog.Logger) func(next http.Handler) http.Handler {
 				slog.String("path", r.URL.Path),
 				slog.String("remote", r.RemoteAddr),
 				slog.String("user-agent", r.UserAgent()),
-				slog.String("request_id", api.GetReqID(r.Context())),
+				slog.String("request_id", middleware.GetReqID(r.Context())),
 			)
 
 			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)

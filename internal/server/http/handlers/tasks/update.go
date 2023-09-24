@@ -24,9 +24,9 @@ func HandleUpdateTask(log *slog.Logger, updater TaskUpdater) api.APIFunc {
 	const op = "server.http.handlers.tasks.UpdateTask"
 
 	type req struct {
-		Title       string `json:"title"`
-		Description string `json:"description"`
-		IsCompleted bool   `json:"is_completed"`
+		Title       string `json:"title" validate:"required,min=3,max=100"`
+		Description string `json:"description" validate:"required,min=3,max=255"`
+		IsCompleted bool   `json:"is_completed" validate:"boolean"`
 	}
 
 	type task struct {
@@ -42,7 +42,7 @@ func HandleUpdateTask(log *slog.Logger, updater TaskUpdater) api.APIFunc {
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
 
-		userID, ok := r.Context().Value(data.ContextKeyUser).(string)
+		userID, ok := r.Context().Value(api.UserIDKey).(string)
 		if !ok {
 			msg := "forbidden"
 
@@ -80,7 +80,12 @@ func HandleUpdateTask(log *slog.Logger, updater TaskUpdater) api.APIFunc {
 		ctx, cancel := context.WithTimeout(r.Context(), 150*time.Millisecond)
 		defer cancel()
 
-		updated, err := updater.Update(ctx, chi.URLParam(r, "id"), data.Task{})
+		updated, err := updater.Update(ctx, chi.URLParam(r, "id"), data.Task{
+			UserID:      userID,
+			Title:       input.Title,
+			Description: input.Description,
+			IsCompleted: input.IsCompleted,
+		})
 		if err != nil {
 			msg := "internal server error"
 
@@ -88,6 +93,7 @@ func HandleUpdateTask(log *slog.Logger, updater TaskUpdater) api.APIFunc {
 				sl.Err(err),
 				slog.String("user_id", userID),
 				slog.String("task_id", chi.URLParam(r, "id")),
+				slog.Any("request body", input),
 			)
 
 			return response.APIError{

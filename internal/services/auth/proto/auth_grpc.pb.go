@@ -26,8 +26,6 @@ type AuthServiceClient interface {
 	Token(ctx context.Context, in *TokenRequest, opts ...grpc.CallOption) (*TokenResponse, error)
 	Refresh(ctx context.Context, in *RefreshRequest, opts ...grpc.CallOption) (*RefreshResponse, error)
 	Verify(ctx context.Context, in *VerifyRequest, opts ...grpc.CallOption) (*VerifyResponse, error)
-	ResetPassword(ctx context.Context, in *ResetPasswordRequest, opts ...grpc.CallOption) (*Response, error)
-	ConfirmSingUp(ctx context.Context, in *ConfirmSignUpRequest, opts ...grpc.CallOption) (*Response, error)
 }
 
 type authServiceClient struct {
@@ -74,24 +72,6 @@ func (c *authServiceClient) Verify(ctx context.Context, in *VerifyRequest, opts 
 	return out, nil
 }
 
-func (c *authServiceClient) ResetPassword(ctx context.Context, in *ResetPasswordRequest, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
-	err := c.cc.Invoke(ctx, "/auth.AuthService/ResetPassword", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authServiceClient) ConfirmSingUp(ctx context.Context, in *ConfirmSignUpRequest, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
-	err := c.cc.Invoke(ctx, "/auth.AuthService/ConfirmSingUp", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // AuthServiceServer is the server API for AuthService service.
 // All implementations must embed UnimplementedAuthServiceServer
 // for forward compatibility
@@ -100,8 +80,6 @@ type AuthServiceServer interface {
 	Token(context.Context, *TokenRequest) (*TokenResponse, error)
 	Refresh(context.Context, *RefreshRequest) (*RefreshResponse, error)
 	Verify(context.Context, *VerifyRequest) (*VerifyResponse, error)
-	ResetPassword(context.Context, *ResetPasswordRequest) (*Response, error)
-	ConfirmSingUp(context.Context, *ConfirmSignUpRequest) (*Response, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -120,12 +98,6 @@ func (UnimplementedAuthServiceServer) Refresh(context.Context, *RefreshRequest) 
 }
 func (UnimplementedAuthServiceServer) Verify(context.Context, *VerifyRequest) (*VerifyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Verify not implemented")
-}
-func (UnimplementedAuthServiceServer) ResetPassword(context.Context, *ResetPasswordRequest) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ResetPassword not implemented")
-}
-func (UnimplementedAuthServiceServer) ConfirmSingUp(context.Context, *ConfirmSignUpRequest) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ConfirmSingUp not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}
 
@@ -212,42 +184,6 @@ func _AuthService_Verify_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AuthService_ResetPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ResetPasswordRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthServiceServer).ResetPassword(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/auth.AuthService/ResetPassword",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).ResetPassword(ctx, req.(*ResetPasswordRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthService_ConfirmSingUp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ConfirmSignUpRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthServiceServer).ConfirmSingUp(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/auth.AuthService/ConfirmSingUp",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).ConfirmSingUp(ctx, req.(*ConfirmSignUpRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // AuthService_ServiceDesc is the grpc.ServiceDesc for AuthService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -270,14 +206,6 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Verify",
 			Handler:    _AuthService_Verify_Handler,
-		},
-		{
-			MethodName: "ResetPassword",
-			Handler:    _AuthService_ResetPassword_Handler,
-		},
-		{
-			MethodName: "ConfirmSingUp",
-			Handler:    _AuthService_ConfirmSingUp_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

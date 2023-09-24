@@ -69,7 +69,7 @@ func (s *TasksStorage) UncompletedStatistic(ctx context.Context) ([]data.Statist
 
 // FindByUserID returns a list of tasks for a given user.
 func (s *TasksStorage) FindByUserID(ctx context.Context, userID string) ([]data.Task, error) {
-	const query = "SELECT id, user_id, title, description, is_completed, created_on FROM tasks WHERE user_id = $1"
+	const query = "SELECT id, user_id, title, description, is_completed, created_on FROM tasks WHERE user_id = $1 AND is_deleted = false"
 
 	prepareCtx, cancel := context.WithTimeout(ctx, storages.PrepareTimeout)
 	defer cancel()
@@ -138,7 +138,7 @@ func (s *TasksStorage) Save(ctx context.Context, t *data.Task) error {
 // Actually set is_delete = true.
 // If count of affected rows is not 1 returns tasks.ErrNotFound.
 func (s *TasksStorage) Delete(ctx context.Context, id string) error {
-	const query = "UPDATE tasks SET is_deleted = true"
+	const query = "UPDATE tasks SET is_deleted = true WHERE id = $1"
 
 	prepareCtx, cancel := context.WithTimeout(ctx, storages.PrepareTimeout)
 	defer cancel()
@@ -181,7 +181,7 @@ func (s *TasksStorage) Update(ctx context.Context, t *data.Task) error {
 	}
 	defer stmt.Close()
 
-	res, err := stmt.ExecContext(ctx, t.ID, t.Title, t.Description, t.IsCompleted)
+	res, err := stmt.ExecContext(ctx, t.Title, t.Description, t.IsCompleted, t.ID)
 	if err != nil {
 		return err
 	}

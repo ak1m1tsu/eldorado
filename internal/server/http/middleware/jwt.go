@@ -18,7 +18,7 @@ const (
 	tokenCookie  = "access_token"
 )
 
-func JWT(log *slog.Logger, client proto.AuthServiceClient) func(next http.Handler) http.Handler {
+func JWT(log *slog.Logger, client proto.AuthServiceClient) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			log := log.With(
@@ -77,6 +77,8 @@ func JWT(log *slog.Logger, client proto.AuthServiceClient) func(next http.Handle
 			log.Info("request verified", slog.String("token", token), slog.String("user_id", resp.UserID))
 
 			ctx := context.WithValue(r.Context(), api.UserIDKey, resp.UserID)
+			ctx = context.WithValue(ctx, api.TokenKey, token)
+
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}
 
