@@ -1,23 +1,11 @@
 env: local
-allowed_origins:
-  - "localhost:3030"
+auth_service_addr: auth:8081
 postgres:
-  url:
-  port: 5432
+  url: postgres://postgres:postgres@postgres:5432/eldorado?sslmode=disable
 server:
-  addr: localhost:3000
+  addr: :8080
   read_timeout: 10s
   write_timeout: 10s
   idle_timeout: 120s
 redis:
-  url:
-  read_timeout: 10s
-  write_timeout: 10s
-  dial_timeout: 10s
-  shutdown_time: 5s
-access:
-  expiration: 5m
-refresh:
-  expiration: 15m
-rabbitmq:
-  queue_name: EMAILS
+  url: redis://default:guest@redis:6379/0?dial_timeout=15s&read_timeout=5s&write_timeout=5s

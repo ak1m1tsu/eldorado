@@ -9,7 +9,10 @@ import (
 )
 
 type APIConfig struct {
-	Env string `yaml:"env"`
+	Env             string   `yaml:"env"`
+	AuthServiceAddr string   `yaml:"auth_service_addr" env:"AUTH_SERVICE_ADDR"`
+	Postgres        postgres `yaml:"postgres"`
+	Server          server   `yaml:"server"`
 }
 
 type StatisticServiceConfig struct {
@@ -38,6 +41,13 @@ type rsacreds struct {
 	PrivateKey string        `yaml:"private_key" env:"RSA_PRIVATE_KEY"`
 	PublicKey  string        `yaml:"public_key" env:"RSA_PUBLIC_KEY"`
 	Expires    time.Duration `yaml:"expires"`
+}
+
+type server struct {
+	Addr         string        `yaml:"addr"`
+	ReadTimeout  time.Duration `yaml:"read_timeout"`
+	WriteTimeout time.Duration `yaml:"write_timeout"`
+	IdleTimeout  time.Duration `yaml:"idle_timeout"`
 }
 
 type redis struct {

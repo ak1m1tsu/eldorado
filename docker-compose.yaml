@@ -8,7 +8,8 @@ services:
       dockerfile: ./build/api.Dockerfile
     restart: always
     environment:
-      - PORT=${API_PORT}
+      PORT: ${API_PORT}
+      API_CONFIG_PATH: ${API_CONFIG_PATH}
     networks:
       - worknet
     ports:
@@ -22,8 +23,10 @@ services:
       dockerfile: ./build/auth.Dockerfile
     restart: always
     environment:
-      - PORT=${AUTH_SERVICE_PORT}
-      - AUTH_SERVICE_CONFIG_PATH=${AUTH_SERVICE_CONFIG_PATH}
+      PORT: ${AUTH_SERVICE_PORT}
+      AUTH_SERVICE_CONFIG_PATH: ${AUTH_SERVICE_CONFIG_PATH}
+      RSA_PRIVATE_KEY: ${RSA_PRIVATE_KEY}
+      RSA_PUBLIC_KEY: ${RSA_PUBLIC_KEY}
     networks:
       - worknet
     ports:
@@ -39,9 +42,9 @@ services:
       dockerfile: ./build/emailsender.Dockerfile
     restart: always
     environment:
-      - EMAIL_SENDER_CONFIG_PATH=${EMAIL_SENDER_CONFIG_PATH}
-      - SMTP_EMAIL=${SMTP_EMAIL}
-      - SMTP_PASS=${SMTP_PASS}
+      EMAIL_SENDER_CONFIG_PATH: ${EMAIL_SENDER_CONFIG_PATH}
+      SMTP_EMAIL: ${SMTP_EMAIL}
+      SMTP_PASS: ${SMTP_PASS}
     networks:
       - worknet
     ports:
@@ -55,7 +58,7 @@ services:
       dockerfile: ./build/statistic.Dockerfile
     restart: always
     environment:
-      - STATISTIC_CONFIG_PATH=${STATISTIC_CONFIG_PATH}
+      STATISTIC_CONFIG_PATH: ${STATISTIC_CONFIG_PATH}
     networks:
       - worknet
     ports:
@@ -81,7 +84,7 @@ services:
           cpus: '1'
           memory: "3G"
   redis:
-    container_name: cache
+    container_name: sessions
     image: bitnami/redis:latest
     environment:
       REDIS_DISABLE_COMMANDS: FLUSHDB,FLUSHALL,CONFIG

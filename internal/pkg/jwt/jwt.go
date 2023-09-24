@@ -1,6 +1,8 @@
 package jwt
 
 import (
+	"crypto/rsa"
+	"encoding/base64"
 	"fmt"
 	"time"
 
@@ -9,7 +11,7 @@ import (
 	"github.com/romankravchuk/eldorado/internal/data"
 )
 
-func CreateToken(payload *data.TokenPayload, ttl time.Duration, prvKey []byte) (*data.TokenDetails, error) {
+func CreateToken(payload *data.TokenPayload, ttl time.Duration, key *rsa.PrivateKey) (*data.TokenDetails, error) {
 	now := time.Now().UTC()
 	td := &data.TokenDetails{
 		ID:        uuid.New().String(),
@@ -17,13 +19,9 @@ func CreateToken(payload *data.TokenPayload, ttl time.Duration, prvKey []byte) (
 		ExpiresAt: now.Add(ttl).Unix(),
 	}
 
-	key, err := jwt.ParseRSAPrivateKeyFromPEM(prvKey)
-	if err != nil {
-		return nil, err
-	}
 	claims := data.Claims{
 		TokenID: td.ID,
-		UserID:  payload.ID,
+		UserID:  payload.UserID,
 		Email:   payload.Email,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(now.Add(ttl)),
@@ -33,20 +31,17 @@ func CreateToken(payload *data.TokenPayload, ttl time.Duration, prvKey []byte) (
 		},
 	}
 
+	var err error
+
 	td.Token, err = jwt.NewWithClaims(jwt.SigningMethodRS256, &claims).SignedString(key)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create token: %w", err)
 	}
 
 	return td, nil
 }
 
-func ValidateToken(token string, publickKey []byte) (*data.TokenPayload, error) {
-	key, err := jwt.ParseRSAPublicKeyFromPEM(publickKey)
-	if err != nil {
-		return nil, err
-	}
-
+func ValidateToken(token string, key *rsa.PublicKey) (*data.TokenPayload, error) {
 	parsedToken, err := jwt.ParseWithClaims(
 		token,
 		&data.Claims{},
@@ -73,4 +68,28 @@ func ValidateToken(token string, publickKey []byte) (*data.TokenPayload, error) 
 	}
 
 	return payload, nil
+}
+
+func ParseKeyPairs(strPem, strPub string) (*rsa.PrivateKey, *rsa.PublicKey, error) {
+	decodedPem, err := base64.StdEncoding.DecodeString(strPem)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to decode private key: %w", err)
+	}
+
+	decodedPub, err := base64.StdEncoding.DecodeString(strPub)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to decode public key: %w", err)
+	}
+
+	pem, err := jwt.ParseRSAPrivateKeyFromPEM(decodedPem)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	pub, err := jwt.ParseRSAPublicKeyFromPEM(decodedPub)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return pem, pub, nil
 }

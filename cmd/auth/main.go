@@ -18,11 +18,9 @@ import (
 
 var serviceRules = map[string]map[string]string{
 	"sign-up": {
-		"Email":     "required,email",
-		"Username":  "required,alpha,gte=5,lte=20",
-		"Password":  "required,gte=8,alphanum,lte=20",
-		"FirstName": "omitempty,alpha,gte=2",
-		"LastName":  "omitempty,alpha,gte=2",
+		"Email":    "required,email",
+		"Username": "required,alpha,gte=5,lte=20",
+		"Password": "required,gte=8,alphanum,lte=20",
 	},
 	"token": {
 		"Email":    "required,email",
@@ -30,12 +28,6 @@ var serviceRules = map[string]map[string]string{
 	},
 	"refresh": {
 		"Refresh": "required",
-	},
-	"reset-password": {
-		"AccessToken": "required",
-	},
-	"confirm-sign-up": {
-		"Code": "required",
 	},
 }
 
@@ -51,8 +43,6 @@ func main() {
 	validator.RegisterRules(&proto.SignUpRequest{}, serviceRules["sign-up"])
 	validator.RegisterRules(&proto.TokenRequest{}, serviceRules["token"])
 	validator.RegisterRules(&proto.RefreshRequest{}, serviceRules["refresh"])
-	validator.RegisterRules(&proto.ResetPasswordRequest{}, serviceRules["reset-password"])
-	validator.RegisterRules(&proto.ConfirmSignUpRequest{}, serviceRules["confirm-sign-up"])
 
 	svc, err := auth.New(
 		auth.WithLogger(log),

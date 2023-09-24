@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -54,7 +53,7 @@ func WithUsersPostgresStorage(url string) Option {
 
 func WithAccessCreds(pvKey, pbKey string, ttl time.Duration) Option {
 	return func(s *Service) error {
-		pem, pub, err := decodeRSAKeys(pbKey, pbKey)
+		pem, pub, err := jwt.ParseKeyPairs(pvKey, pbKey)
 		if err != nil {
 			return err
 		}
@@ -70,7 +69,7 @@ func WithAccessCreds(pvKey, pbKey string, ttl time.Duration) Option {
 
 func WithRefreshCreds(pvKey, pbKey string, ttl time.Duration) Option {
 	return func(s *Service) error {
-		pem, pub, err := decodeRSAKeys(pbKey, pbKey)
+		pem, pub, err := jwt.ParseKeyPairs(pvKey, pbKey)
 		if err != nil {
 			return err
 		}
@@ -348,50 +347,20 @@ func (s *Service) Refresh(ctx context.Context, in *proto.RefreshRequest) (*proto
 	}, nil
 }
 
-func (s *Service) ResetPassword(ctx context.Context, in *proto.ResetPasswordRequest) (*proto.Response, error) {
-	const op = "services.auth.ResetPassword"
-
-	log := s.log.With("op", op)
-
-	if err := validator.ValidateStruct(in); err != nil {
-		msg := "failed to validate request"
-
-		log.Error(msg, sl.Err(err))
-
-		return &proto.Response{
-			Status: http.StatusBadRequest,
-			Error:  err.Error(),
-		}, nil
-	}
-
-	return &proto.Response{Status: http.StatusOK}, nil
-}
-
-func (s *Service) ConfirmSingUp(ctx context.Context, in *proto.ConfirmSignUpRequest) (*proto.Response, error) {
-	const op = "services.auth.ConfirmSingUp"
-
-	log := s.log.With("op", op)
-
-	if err := validator.ValidateStruct(in); err != nil {
-		msg := "failed to validate request"
-
-		log.Error(msg, sl.Err(err))
-
-		return &proto.Response{
-			Status: http.StatusBadRequest,
-			Error:  err.Error(),
-		}, nil
-	}
-
-	return &proto.Response{Status: http.StatusOK}, nil
-}
-
-func decodeRSAKeys(private, public string) (pem, pub []byte, err error) {
-	pem, err = base64.StdEncoding.DecodeString(private)
+func (s *Service) Verify(ctx context.Context, in *proto.VerifyRequest) (*proto.VerifyResponse, error) {
+	payload, err := jwt.ValidateToken(in.Token, s.access.PublicKey)
 	if err != nil {
-		return
+		msg := "failed to valide request token"
+
+		s.log.Error(msg, sl.Err(err), slog.String("token", in.Token))
+
+		return &proto.VerifyResponse{
+			Meta: &proto.Response{Status: http.StatusForbidden},
+		}, nil
 	}
 
-	pub, err = base64.StdEncoding.DecodeString(public)
-	return
+	return &proto.VerifyResponse{
+		Meta:   &proto.Response{Status: http.StatusOK},
+		UserID: payload.UserID,
+	}, nil
 }
