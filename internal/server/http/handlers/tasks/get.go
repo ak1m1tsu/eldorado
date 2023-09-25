@@ -13,6 +13,7 @@ import (
 	"github.com/romankravchuk/eldorado/internal/server/http/api/response"
 )
 
+//go:generate go run github.com/vektra/mockery/v2@v2.20.2 --name TasksLister
 type TasksLister interface {
 	List(ctx context.Context, userID string) ([]data.Task, error)
 }

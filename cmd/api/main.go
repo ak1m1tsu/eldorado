@@ -44,6 +44,7 @@ func main() {
 
 	svc, err := tasks.New(
 		tasks.WithTaskPostgresStorage(cfg.Postgres.URL),
+		tasks.WithRedisCache(cfg.Redis.URL, cfg.Redis.TTL),
 	)
 	if err != nil {
 		slog.Error("failed to create tasks service", sl.Err(err))

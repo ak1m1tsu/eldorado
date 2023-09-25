@@ -17,6 +17,8 @@ import (
 	"github.com/romankravchuk/eldorado/internal/services"
 	"github.com/romankravchuk/eldorado/internal/services/auth/proto"
 	"github.com/romankravchuk/eldorado/internal/storages"
+	"github.com/romankravchuk/eldorado/internal/storages/sessions"
+	"github.com/romankravchuk/eldorado/internal/storages/sessions/redis"
 	"github.com/romankravchuk/eldorado/internal/storages/users"
 	"github.com/romankravchuk/eldorado/internal/storages/users/pg"
 	"golang.org/x/crypto/bcrypt"
@@ -83,6 +85,24 @@ func WithRefreshCreds(pvKey, pbKey string, ttl time.Duration) Option {
 	}
 }
 
+func WithSessionsStorage(sessions sessions.Storage) Option {
+	return func(s *Service) error {
+		s.sessions = sessions
+		return nil
+	}
+}
+
+func WtihRedisSessionsStorage(url string) Option {
+	return func(s *Service) error {
+		client, err := storages.NewRedisClient(url)
+		if err != nil {
+			return err
+		}
+
+		return WithSessionsStorage(redis.New(client))(s)
+	}
+}
+
 func WithLogger(log *slog.Logger) Option {
 	return func(s *Service) error {
 		if log == nil {
@@ -95,7 +115,8 @@ func WithLogger(log *slog.Logger) Option {
 }
 
 type Service struct {
-	users users.Storage
+	users    users.Storage
+	sessions sessions.Storage
 
 	log *slog.Logger
 
@@ -258,6 +279,13 @@ func (s *Service) Token(ctx context.Context, in *proto.TokenRequest) (*proto.Tok
 		}, nil
 	}
 
+	err = s.sessions.Set(ctx, access.Payload.ID, []byte(access.Token), s.access.TTL)
+	if err != nil {
+		msg := "failed to add session to storage"
+
+		log.Error(msg, sl.Err(err), slog.Any("access_token", access), slog.Any("request", in))
+	}
+
 	refresh, err := jwt.CreateToken(
 		&data.TokenPayload{
 			ID:     uuid.NewString(),
@@ -278,6 +306,13 @@ func (s *Service) Token(ctx context.Context, in *proto.TokenRequest) (*proto.Tok
 				Error:  msg,
 			},
 		}, nil
+	}
+
+	err = s.sessions.Set(ctx, refresh.Payload.ID, []byte(refresh.Token), s.refresh.TTL)
+	if err != nil {
+		msg := "failed to store refresh token in storage"
+
+		log.Error(msg, sl.Err(err), slog.Any("refresh_token", refresh), slog.Any("request", in))
 	}
 
 	return &proto.TokenResponse{
@@ -321,6 +356,20 @@ func (s *Service) Refresh(ctx context.Context, in *proto.RefreshRequest) (*proto
 		}, nil
 	}
 
+	_, err = s.sessions.Get(ctx, payload.ID)
+	if err != nil {
+		msg := "refresh token is expired"
+
+		log.Error(msg, sl.Err(err))
+
+		return &proto.RefreshResponse{
+			Meta: &proto.Response{
+				Status: http.StatusForbidden,
+				Error:  err.Error(),
+			},
+		}, nil
+	}
+
 	access, err := jwt.CreateToken(
 		payload,
 		s.access.TTL,
@@ -337,6 +386,12 @@ func (s *Service) Refresh(ctx context.Context, in *proto.RefreshRequest) (*proto
 				Error:  err.Error(),
 			},
 		}, nil
+	}
+
+	if err = s.sessions.Set(ctx, access.Payload.ID, []byte(access.Token), s.access.TTL); err != nil {
+		msg := "failed to add access token to storage"
+
+		log.Error(msg, sl.Err(err), slog.Any("access_token", access), slog.Any("request", in))
 	}
 
 	return &proto.RefreshResponse{
@@ -356,6 +411,33 @@ func (s *Service) Verify(ctx context.Context, in *proto.VerifyRequest) (*proto.V
 
 		return &proto.VerifyResponse{
 			Meta: &proto.Response{Status: http.StatusForbidden},
+		}, nil
+	}
+
+	_, err = s.sessions.Get(ctx, payload.ID)
+	if err != nil {
+		if errors.Is(err, sessions.ErrNotFound) {
+			msg := "access token is expired"
+
+			s.log.Error(msg, sl.Err(err), slog.Any("request", in), slog.Any("payload", payload))
+
+			return &proto.VerifyResponse{
+				Meta: &proto.Response{
+					Status: http.StatusForbidden,
+					Error:  msg,
+				},
+			}, nil
+		}
+
+		msg := "failed to get session from storage"
+
+		s.log.Error(msg, sl.Err(err), slog.Any("request", in), slog.Any("payload", payload))
+
+		return &proto.VerifyResponse{
+			Meta: &proto.Response{
+				Status: http.StatusInternalServerError,
+				Error:  msg,
+			},
 		}, nil
 	}
 

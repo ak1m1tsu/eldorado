@@ -7,27 +7,25 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/google/uuid"
 	"github.com/romankravchuk/eldorado/internal/data"
 )
 
 func CreateToken(payload *data.TokenPayload, ttl time.Duration, key *rsa.PrivateKey) (*data.TokenDetails, error) {
 	now := time.Now().UTC()
 	td := &data.TokenDetails{
-		ID:        uuid.New().String(),
 		Payload:   *payload,
 		ExpiresAt: now.Add(ttl).Unix(),
 	}
 
 	claims := data.Claims{
-		TokenID: td.ID,
+		TokenID: payload.ID,
 		UserID:  payload.UserID,
 		Email:   payload.Email,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(now.Add(ttl)),
 			NotBefore: jwt.NewNumericDate(now),
 			IssuedAt:  jwt.NewNumericDate(now),
-			ID:        td.ID,
+			ID:        payload.ID,
 		},
 	}
 

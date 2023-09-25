@@ -16,6 +16,7 @@ import (
 	"github.com/romankravchuk/eldorado/internal/server/http/api/response"
 )
 
+//go:generate go run github.com/vektra/mockery/v2@v2.20.2 --name TaskUpdater
 type TaskUpdater interface {
 	Update(ctx context.Context, id string, t data.Task) (data.Task, error)
 }
