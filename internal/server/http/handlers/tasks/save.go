@@ -14,6 +14,7 @@ import (
 	"github.com/romankravchuk/eldorado/internal/server/http/api/response"
 )
 
+//go:generate go run github.com/vektra/mockery/v2@v2.20.2 --name TaskCreater
 type TaskCreater interface {
 	Create(ctx context.Context, userID string, task data.Task) (data.Task, error)
 }

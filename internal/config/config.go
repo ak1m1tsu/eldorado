@@ -13,6 +13,7 @@ type APIConfig struct {
 	AuthServiceAddr string   `yaml:"auth_service_addr" env:"AUTH_SERVICE_ADDR"`
 	Postgres        postgres `yaml:"postgres"`
 	Server          server   `yaml:"server"`
+	Redis           redis    `yaml:"redis"`
 }
 
 type StatisticServiceConfig struct {
@@ -51,7 +52,8 @@ type server struct {
 }
 
 type redis struct {
-	URL string `yaml:"url" env:"REDIS_URL"`
+	URL string        `yaml:"url" env:"REDIS_URL"`
+	TTL time.Duration `yaml:"cache_ttl" env:"REDIS_CACHE_TTL" env-default:"30m"`
 }
 
 type postgres struct {

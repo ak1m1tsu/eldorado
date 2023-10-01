@@ -15,7 +15,6 @@ type TokenPayload struct {
 
 type TokenDetails struct {
 	Token     string
-	ID        string
 	Payload   TokenPayload
 	ExpiresAt int64
 }

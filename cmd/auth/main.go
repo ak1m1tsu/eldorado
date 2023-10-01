@@ -47,6 +47,7 @@ func main() {
 	svc, err := auth.New(
 		auth.WithLogger(log),
 		auth.WithUsersPostgresStorage(cfg.Postgres.URL),
+		auth.WtihRedisSessionsStorage(cfg.Redis.URL),
 		auth.WithAccessCreds(cfg.AccessCreds.PrivateKey, cfg.AccessCreds.PublicKey, cfg.AccessCreds.Expires),
 		auth.WithRefreshCreds(cfg.RefreshCreds.PrivateKey, cfg.RefreshCreds.PublicKey, cfg.RefreshCreds.Expires),
 	)
