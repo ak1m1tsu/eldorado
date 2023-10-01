@@ -1,5 +1,41 @@
 # Eldorado
 
+Eldorado is a simple todo application implemented using microservices.
+
+## Technologies
+
+- RabbitMQ (communication between auth service/statistics service and email sending service)
+- gRPC (communication between auth service and todo service)
+- Redis (cache, session storage)
+- PostgreSQL (database)
+- Cron (schedule statistics service)
+- Docker (deploy services, message broker, etc.)
+- SMTP (send emails)
+
+## Design Diagram
+
+![](./assets/Eldorado%20Design.svg)
+
+## Services
+
+### Auth Service
+
+The authorization service runs on the gRPC framework, its main functionality is to create new users, issue JWTs to access the functionality of the main service, and refresh the access token.
+
+All tokens are stored in Redis. When a new user is created, the auth service communicates with the email sending service to send a welcome message to the new user's email.
+
+### Email sending Service
+
+The email sending service is created useing RabbitMQ. It's main functionality is to listen to the queue in which email messages arrive and send them to users using SMTP.
+
+### Statistics Service
+
+The statistics service collect statistic about users uncompleted tasks and send it to email sending service. It collects data on a schedule, with cron task syntax, which can be edited in the config file.
+
+### Todo Service
+
+ToDo service provides CRUD operations over tasks for authorized users, possibility of new user registration and authorization for anonymous users. For authorization and registration data the service interacts with authorization service using gRPC. All data is cached in Redis, and the cache is cleared when the data is changed.
+
 ## Hot to run?
 
 Create `.env` file:
@@ -31,3 +67,154 @@ SMTP_PASS=your_smtp_password
 ```
 
 Next, run `make up` command
+
+# ToDo API endpoints
+
+**Error response**
+
+```json
+{
+    "error": "message",
+}
+```
+
+## Check health status
+
+```shell
+curl http://localhost:8080/health
+```
+
+**Response**
+
+```json
+{
+    "message": "alive",
+}
+```
+
+## Register new user
+
+```shell
+curl -X POST --data '{"email":"admin@example.com","username":"admin","password":"test1234"}' http://localhost:8080/api/auth
+```
+
+**Response**
+
+```json
+{
+    "message": "ok",
+}
+```
+
+## Get access and refresh tokens
+
+```shell
+curl -X POST --data '{"email":"admin@example.com","password":"test1234"}' http://localhost:8080/api/auth/token
+```
+
+**Response**
+```json
+{
+    "access_token": "string",
+    "refresh_token": "string",
+}
+```
+
+## Refresh access token
+
+```shell
+curl -X POST --cookie "refresh_token=string" http://localhost:8080/api/refresh
+```
+
+**Response**
+
+```json
+{
+    "access_token": "string",
+}
+```
+
+
+## Tasks CRUD
+
+Each of these requests requires the header authorization bearer with access token
+
+```shell
+curl -H "Authorization: Bearer <token>"
+```
+
+### Get tasks
+
+```shell
+curl http://localhost:8080/tasks
+```
+
+**Response**
+
+```json
+{
+  "tasks": [
+    {
+      "id": "a4501171-30f5-4fd3-88a2-3d4089fb7c63",
+      "title": "first task",
+      "description": "this is my first task, haha!",
+      "created_at": "2023-09-25T11:40:35Z",
+      "is_completed": false
+    }
+  ]
+}
+```
+
+### Create new task
+
+```shell
+curl -X POST --data '{"title":"hello","description":"go to home"}' http://localhost:8080/api/tasks
+```
+
+**Response**
+
+```json
+{
+  "task": {
+    "id": "8673ce18-6bcc-4c02-9c9a-997c3784f84b",
+    "title": "hello",
+    "description": "go to home",
+    "is_completed": false,
+    "created_on": "2023-10-01T04:44:58Z"
+  }
+}
+```
+
+### Update task
+
+```shell
+curl -X PUT --data '{"title":"go back", "description":"welcome", "is_completed":true}' http://localhost:8080/api/tasks/8673ce18-6bcc-4c02-9c9a-997c3784f84b
+```
+
+**Response**
+
+```json
+{
+  "task": {
+    "id": "8673ce18-6bcc-4c02-9c9a-997c3784f84b",
+    "title": "go back",
+    "description": "welcome",
+    "created_at": "0001-01-01T00:00:00Z",
+    "is_completed": true
+  }
+}
+```
+
+### Delete task
+
+```shell
+curl -X DELETE http://localhost:8080/api/tasks/8673ce18-6bcc-4c02-9c9a-997c3784f84b
+```
+
+**Response**
+
+```json
+{
+    "message": "ok"
+}
+```
